@@ -103,14 +103,16 @@ print(response.status_code)
 jprint(response.json())
 
 for issues in response.json():
-    if issues['event'] == "closed":
+    if hasattr(issues['payload'], "action") and issues['payload']['action'] == "closed"   and issues['type'] == "IssuesEvent":
         response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues", {"state": "closed"})        
         print("closed issues")
         jprint(response.json())
-    elif issues['event'] == "added_to_project":
+    elif hasattr(issues['payload'], "action") and issues['payload']['action'] == "opened" and issues['type'] == "IssuesEvent":
         response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues", {"state": "open"})        
         print("opened issues")
         jprint(response.json())
+    else:
+        print("nada")
 
 closedIssues = 0
 

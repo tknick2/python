@@ -67,7 +67,7 @@ parameters = {
     "password": "GitIsGr8" 
 }
 
-response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues", params=parameters)
+response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues")
 print(response.status_code)
 jprint(response.json())
 
@@ -85,26 +85,44 @@ jprint(response.json())
 
 test = response.json()
 
-timestamp = test[1]['updated_at']
+timestamp = test[0]['updated_at']
 
 print(timestamp)
 
 parameters2 = {
     "since": timestamp,
-    "username": "tknick2", 
-    "password": "GitIsGr8" 
+    "state": "all"
 }
 
-response = requests.post("https://api.github.com/repos/omxhealth/t-k-interview/issues", params=parameters)
+response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues", params=parameters2)
 print(response.status_code)
 jprint(response.json())
 
+response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/events")
+print(response.status_code)
+jprint(response.json())
+
+for issues in response.json():
+    if issues['event'] == "closed":
+        response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues", {"state": "closed"})        
+        print("closed issues")
+        jprint(response.json())
+    elif issues['event'] == "added_to_project":
+        response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues", {"state": "open"})        
+        print("opened issues")
+        jprint(response.json())
+
+closedIssues = 0
+
 #ok this is confusing...why do i need the 0???
-for issue in test:    
-    # if issue['updated_at'] > timestamp:
-    #     timestamp = issue['updated_at']    
-    print("ID: " + str(issue['id']))
-    print("Title: " + str(issue['title']))
+# for issue in response.json():    
+#     # if issue['updated_at'] > timestamp:
+#     #     timestamp = issue['updated_at']    
+#     # if issue['closed_at'] != None:
+#         # closedIssues += 1
+#     print("ID: " + str(issue['id']))
+#     print("Title: " + str(issue['title']))
 # title = json.loads(json.dumps(response.json())
 
+print("Closed Issues: " + str(closedIssues))
 # print(json.dumps(title))

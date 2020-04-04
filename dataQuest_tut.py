@@ -1,6 +1,7 @@
 #https://www.dataquest.io/blog/python-api-tutorial/
 import requests
 import json
+from time import sleep
 from datetime import datetime
 
 # #test 404 error code, this api doesnt exist!!!
@@ -17,11 +18,7 @@ from datetime import datetime
 # response = requests.get("http://api.open-notify.org/astros.json")
 # print(response.json())
 
-# #creates a string from a python object 
-def jprint(obj):
-    #create a formatted string of the Python JSON object
-    text = json.dumps(obj, sort_keys=True, indent=4)
-    print(text)
+
 
 # #test jprint function
 # jprint(response.json())
@@ -62,14 +59,16 @@ def jprint(obj):
 # print(response.status_code)
 # jprint(response.json())
 
-parameters = {
-    "username": "tknick2", 
-    "password": "GitIsGr8" 
-}
+# parameters = {
+#     "username": "tknick2", 
+#     "password": "GitIsGr8" 
+# }
 
-response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues")
-print(response.status_code)
-jprint(response.json())
+# requests.get("https://api.github.com/tknick2", auth=requests.auth.HTTPBasicAuth("tknick2", "GitIsGr8"))
+
+# response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues")
+# print(response.status_code)
+# jprint(response.json())
 
 # response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues/events", params={
 #     "number": 0
@@ -79,42 +78,159 @@ jprint(response.json())
 
 # response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues/comments", params={
 #     "number": 1
+
 # })
 # print(response.status_code)
 # jprint(response.json())
 
-test = response.json()
 
-timestamp = test[0]['updated_at']
 
-print(timestamp)
+# test = response.json()
 
-parameters2 = {
-    "since": timestamp,
-    "state": "all"
-}
+# timestamp = test[0]['updated_at']
 
-response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues", params=parameters2)
-print(response.status_code)
-jprint(response.json())
+# print(timestamp)
 
-response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/events")
-print(response.status_code)
-jprint(response.json())
+# parameters2 = {
+#     "since": timestamp,
+#     "state": "all"
+# }
 
-for issues in response.json():
-    if hasattr(issues['payload'], "action") and issues['payload']['action'] == "closed"   and issues['type'] == "IssuesEvent":
-        response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues", {"state": "closed"})        
-        print("closed issues")
-        jprint(response.json())
-    elif hasattr(issues['payload'], "action") and issues['payload']['action'] == "opened" and issues['type'] == "IssuesEvent":
-        response = requests.get("https://api.github.com/repos/omxhealth/t-k-interview/issues", {"state": "open"})        
-        print("opened issues")
-        jprint(response.json())
-    else:
-        print("nada")
+# responseEvents = requests.get(eventsURL)
+# events = responseEvents.json()
+# # print(response.status_code)
+# print("Events...")
+# print(str(len(events)))
+# jprint(events)
+# closedIssues = 0
 
+# parameters = {
+#     "state": "all",
+#     "user": "tknick2",
+# }
+
+
+
+# #creates a string from a python object 
+def jprint(obj):    
+    text = ""
+    print(text)
+
+#prints a new issue, and the current number of existing open issues and closed issues to the terminal
+def ProcessIssue(issue, issues):
+    if issue['state'] == "open":
+        print("New Issue!!!!")
+        jprint(issue)
+
+    elif issue['state'] == "closed":
+        print('Closed Issue!!!!')
+        jprint(issue)
+    
+    closedIssues = 0
+    allIssues = 0
+
+    for issue in issues:
+        if issue['state'] == "closed":
+            closedIssues += 1
+        allIssues += 1
+
+    print("Total Issues: " + str(allIssues))
+    print("Closed Issues: " + str(closedIssues))
+
+
+#moves any new events into the eventsToProcess collection
+def FindNewEvents(events):
+    #create a list of event IDs in the parameter events
+    eventIDs = []    
+    for item in events:
+        eventIDs.append(item['id'])
+
+    #create a list of event IDs in the handled events
+    eventsHandledIDs = []
+    for item in eventsHandled:
+        eventsHandledIDs.append(item['id'])
+
+    #collection of IDs from the supplied collection of events that are not in the handled collection
+    returnIDs = list(set(eventIDs) - set(eventsHandledIDs))
+
+    #collection of event objects to return
+    returnEvents = []
+
+    #add event objects to the return collection and return
+    for returnEventID in returnIDs:
+        for event in events:
+            if returnEventID == event['id']:
+                returnEvents.append(event)
+    
+    return returnEvents
+
+
+#collection of handled event ids
+eventsHandled = []
+
+#collection of unhandled event ids in case more than 1 new event comes back
+eventsToProcess = []
+
+#git API URL for the repo of interest
+issuesURL = "https://api.github.com/repos/tknick2/Test/issues"
+eventsURL = "https://api.github.com/repos/tknick2/Test/events"
+
+allIssues = 0
 closedIssues = 0
+
+while True:
+    sleep(5)
+
+    #retrieve all current events and issues
+    response = requests.get(eventsURL, auth=requests.auth.HTTPBasicAuth("tknick2", "GitIsGr8"))
+    events = response.json()
+    # events = []
+    # for item in eventsResponse:
+    #     events.append(item['id'])
+
+    response = requests.get(issuesURL, {"state": "all"}, auth=requests.auth.HTTPBasicAuth("tknick2", "GitIsGr8"))
+    issues = response.json()
+    # print(response.status_code)
+    print("Issues...")
+    # print(str())
+    # jprint(issues)    
+
+    #fill the processing buffer    
+    eventsToProcess = FindNewEvents(events)
+
+    foundIt = False
+
+
+
+    for event in eventsToProcess:
+        for issue in issues:
+            if 'action' in event['payload'] and event['type'] == "IssuesEvent" and (event['payload']['action'] == "closed" or event['payload']['action'] == "opened") and issue['id'] == event['payload']['issue']['id']:
+                ProcessIssue(issue, issues)                
+                eventsHandled.append(event)
+                break
+
+            
+        
+
+
+# for event in events:
+#     if 'action' in event['payload'] and event['payload']['action'] == "closed" and event['type'] == "IssuesEvent":        
+#         closedIssues += 1
+#         for item in issues:
+#             if(item['id'] == event['payload']['issue']['id']):
+#                 print("closed issue")
+#                 jprint(item)  
+#                 break                                     
+#     elif 'action' in event['payload'] and event['payload']['action'] == "opened" and event['type'] == "IssuesEvent":
+#         for item in issues:
+#             if(item['id'] == event['payload']['issue']['id']):
+#                 print("open issue")
+#                 jprint(item) 
+#                 break                              
+#     else:
+#         print("nada")
+
+
 
 #ok this is confusing...why do i need the 0???
 # for issue in response.json():    

@@ -113,8 +113,8 @@ from datetime import datetime
 
 # #creates a string from a python object 
 def jprint(obj):    
-    text = ""
-    print(text)
+    print("Issue Title: " + obj['title']) 
+    print("Issue ID: " + str(obj['id']))
 
 #prints a new issue, and the current number of existing open issues and closed issues to the terminal
 def ProcessIssue(issue, issues):
@@ -139,28 +139,37 @@ def ProcessIssue(issue, issues):
 
 
 #moves any new events into the eventsToProcess collection
-def FindNewEvents(events):
-    #create a list of event IDs in the parameter events
-    eventIDs = []    
-    for item in events:
-        eventIDs.append(item['id'])
+def FindNewEvents(events, eventHandled):
+    # #create a list of event IDs in the parameter events
+    # eventIDs = []    
+    # for item in events:
+    #     eventIDs.append(item['id'])
 
-    #create a list of event IDs in the handled events
-    eventsHandledIDs = []
-    for item in eventsHandled:
-        eventsHandledIDs.append(item['id'])
+    # #create a list of event IDs in the handled events
+    # eventsHandledIDs = []
+    # for item in eventsHandled:
+    #     eventsHandledIDs.append(item['id'])
 
-    #collection of IDs from the supplied collection of events that are not in the handled collection
-    returnIDs = list(set(eventIDs) - set(eventsHandledIDs))
+    # #collection of IDs from the supplied collection of events that are not in the handled collection
+    # returnIDs = list(set(eventIDs) - set(eventsHandledIDs))
+
+    #register globals
+    # global eventsHandled
 
     #collection of event objects to return
     returnEvents = []
 
+    
+
     #add event objects to the return collection and return
-    for returnEventID in returnIDs:
-        for event in events:
-            if returnEventID == event['id']:
-                returnEvents.append(event)
+    for event in events:
+        foundIt = False
+        for eventHandled in eventsHandled:
+            if event['id'] == eventHandled['id']:
+                foundIt = True
+                break
+        if not foundIt:
+            returnEvents.append(event)
     
     return returnEvents
 
@@ -172,14 +181,14 @@ eventsHandled = []
 eventsToProcess = []
 
 #git API URL for the repo of interest
-issuesURL = "https://api.github.com/repos/tknick2/Test/issues"
-eventsURL = "https://api.github.com/repos/tknick2/Test/events"
+issuesURL = "https://api.github.com/repos/omxhealth/t-k-interview/issues"
+eventsURL = "https://api.github.com/repos/omxhealth/t-k-interview/events"
 
 allIssues = 0
 closedIssues = 0
 
 while True:
-    sleep(5)
+    sleep(1)
 
     #retrieve all current events and issues
     response = requests.get(eventsURL, auth=requests.auth.HTTPBasicAuth("tknick2", "GitIsGr8"))
@@ -191,16 +200,12 @@ while True:
     response = requests.get(issuesURL, {"state": "all"}, auth=requests.auth.HTTPBasicAuth("tknick2", "GitIsGr8"))
     issues = response.json()
     # print(response.status_code)
-    print("Issues...")
+    print("Checking for Issues...")
     # print(str())
     # jprint(issues)    
 
     #fill the processing buffer    
-    eventsToProcess = FindNewEvents(events)
-
-    foundIt = False
-
-
+    eventsToProcess = FindNewEvents(events, eventsHandled)
 
     for event in eventsToProcess:
         for issue in issues:
